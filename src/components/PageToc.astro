@@ -1,0 +1,27 @@
+---
+// Table of contents of the current page. Rendered from the route data
+// (starlightRoute.toc, a public API) rather than with Starlight's <TableOfContents />.
+//
+// That component loads its highlighting script (an IntersectionObserver looking for the
+// element crossing a band at the top of the viewport) together with the TOC markup. The
+// highlight swings up or down depending on the landing position and heading spacing, so the
+// rule is replaced with a scroll position calculation (src/activeTocIndex.ts). The script
+// cannot be disabled while keeping the component, so the markup is kept here as well; it
+// mirrors the upstream one, and the styling is done in src/styles/toc.css.
+import PageTocList from './PageTocList.astro';
+
+const { toc } = Astro.locals.starlightRoute;
+---
+
+{
+	toc && (
+		<page-toc>
+			<nav aria-labelledby="page-toc-title">
+				<h2 id="page-toc-title">{Astro.locals.t('tableOfContents.onThisPage')}</h2>
+				<PageTocList toc={toc.items} />
+			</nav>
+		</page-toc>
+	)
+}
+
+<script src="./page-toc"></script>

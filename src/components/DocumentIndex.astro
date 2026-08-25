@@ -1,0 +1,35 @@
+---
+// Body of the top page (document list).
+// The list is generated from the docs collection, so adding a document needs no edit here.
+// The page lives outside Starlight (src/pages/), but wrapping it in <StarlightPage> gives it
+// the same chrome as a normal document page (header, sidebar, Pagefind index).
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import { getCollection } from 'astro:content';
+import { indexTitles, localeOfDocsId, type Locale } from '../i18n';
+
+interface Props {
+	locale: Locale;
+}
+
+const { locale } = Astro.props;
+
+// Only the documents of the displayed locale, ordered by slug (= content directory name).
+const entries = (await getCollection('docs'))
+	.filter((entry) => localeOfDocsId(entry.id) === locale)
+	.sort((a, b) => a.id.localeCompare(b.id));
+
+// import.meta.env.BASE_URL is `base` from astro.config.mjs (trailing slash depends on it).
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+---
+
+<StarlightPage frontmatter={{ title: indexTitles[locale] }}>
+	<ul>
+		{
+			entries.map((entry) => (
+				<li>
+					<a href={`${base}/${entry.id}/`}>{entry.data.title}</a>
+				</li>
+			))
+		}
+	</ul>
+</StarlightPage>

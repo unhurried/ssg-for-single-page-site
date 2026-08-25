@@ -1,0 +1,12 @@
+---
+// Replaces Starlight's left sidebar (a page list) with the table of contents of the current
+// page. Rendering and highlighting are handled by src/components/PageToc.astro.
+import MobileMenuFooter from 'virtual:starlight/components/MobileMenuFooter';
+import PageToc from './PageToc.astro';
+---
+
+<PageToc />
+
+<div class="md:sl-hidden">
+	<MobileMenuFooter />
+</div>

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200" role="img" aria-labelledby="title desc">
+  <title id="title">黄金螺旋の模式図</title>
+  <desc id="desc">フィボナッチ数に基づく正方形と、そこから描かれる螺旋を示す図</desc>
+  <rect x="0" y="0" width="320" height="200" fill="#f5f5f2" rx="8"/>
+  <g stroke="#7a7a7a" stroke-width="1.5" fill="none">
+    <rect x="150" y="60" width="40" height="40"/>
+    <rect x="150" y="100" width="40" height="25"/>
+    <rect x="190" y="60" width="65" height="65"/>
+    <rect x="110" y="60" width="40" height="90"/>
+    <rect x="110" y="150" width="145" height="35"/>
+  </g>
+  <path d="M190,100 A40,40 0 0 1 150,60"
+        stroke="#c9564b" stroke-width="2.5" fill="none"/>
+  <path d="M150,60 A25,25 0 0 1 175,85"
+        stroke="#c9564b" stroke-width="2.5" fill="none"/>
+  <text x="160" y="20" text-anchor="middle" font-size="14" fill="#333333" font-family="sans-serif">フィボナッチ矩形と螺旋</text>
+</svg>

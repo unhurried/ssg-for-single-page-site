@@ -1,0 +1,40 @@
+/*
+ * Styling for the table of contents (src/components/PageToc.astro).
+ * CSS loaded as customCss belongs to no cascade layer, so it applies as-is regardless of
+ * Starlight's or the theme's layer order.
+ *
+ * The TOC is rendered by our own component, so the styles that applied to Starlight's own TOC
+ * (list appearance, per-level indent, current-entry color) are kept here too.
+ */
+
+page-toc ul {
+	padding: 0;
+	list-style: none;
+}
+
+page-toc a {
+	--pad-inline: 0.5rem;
+	display: block;
+	border-radius: 0.25rem;
+	/* Indent by the heading depth (--depth is set on each ul by PageTocList.astro). */
+	padding-block: 0.25rem;
+	padding-inline: calc(1rem * var(--depth, 0) + var(--pad-inline)) var(--pad-inline);
+	line-height: 1.25;
+	text-decoration: none;
+}
+
+/* Headings from the second level down are collapsed by default (VuePress-style). */
+page-toc li > ul {
+	display: none;
+}
+
+/* The entry containing the displayed heading expands its child headings. */
+page-toc li:has(a[aria-current='true']) > ul {
+	display: block;
+}
+
+/* The displayed heading is emphasized with a background color as well as the text color. */
+page-toc a[aria-current='true'] {
+	color: var(--sl-color-text-accent);
+	background-color: var(--sl-color-gray-6);
+}

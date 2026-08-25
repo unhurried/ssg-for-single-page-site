@@ -1,0 +1,44 @@
+/*
+ * The page name is shown in the header (src/components/SiteTitle.astro), so the h1 that
+ * Starlight's PageTitle renders in the body is visually hidden there. The h1 itself (and its
+ * id) is kept, because:
+ * - Starlight's SkipLink ("skip to content", for screen readers and keyboard use) is
+ *   implemented to jump to this id.
+ * - It keeps the meaning of the heading hierarchy (h1).
+ *
+ * The id '_top' is the same value as PAGE_TITLE_ID in @astrojs/starlight/constants. That
+ * module is not in the package exports and cannot be imported, so the value is inlined here
+ * (tests/unit/upstream-assumptions.test.ts detects a change).
+ *
+ * The PageTitle component itself is not overridden; only CSS is applied to its default output.
+ * CSS loaded as customCss belongs to no cascade layer, so it reliably wins over rules inside
+ * Starlight's or the theme's layers.
+ */
+
+/* Same as .sr-only in @astrojs/starlight/style/util.css. Adding the class would require
+   overriding the component, so the h1 is targeted directly. */
+h1#_top {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border-width: 0;
+}
+
+/*
+ * This h1 displays nothing, but Starlight's Page.astro wraps it in a <ContentPanel>
+ * (.content-panel), leaving just its padding and the border-top separating it from the next
+ * panel at the top of the body. Collapse the panel itself only when the h1 is its only child
+ * (i.e. the normal case, with no draft notice and such).
+ */
+.content-panel:has(> .sl-container > h1#_top:only-child) {
+	padding: 0;
+	border: 0;
+}
+.content-panel:has(> .sl-container > h1#_top:only-child) + .content-panel {
+	border-top: 0;
+}

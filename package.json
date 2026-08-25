@@ -1,0 +1,25 @@
+{
+  "name": "starlight-demo",
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "test": "npm run test:unit && npm run test:e2e",
+    "test:unit": "node --test \"tests/unit/*.test.ts\" \"tests/content/*.test.ts\"",
+    "test:e2e": "node --test --test-concurrency=1 \"tests/e2e/*.test.ts\""
+  },
+  "dependencies": {
+    "@astrojs/markdown-remark": "^7.2.0",
+    "@astrojs/starlight": "^0.41.7",
+    "astro": "^7.1.6",
+    "katex": "^0.18.4",
+    "rehype-katex": "^7.0.1",
+    "remark-math": "^6.0.0",
+    "starlight-theme-nova": "^0.12.2",
+    "unist-util-visit": "^5.1.0"
+  }
+}

@@ -1,0 +1,31 @@
+/*
+ * Table styling.
+ * The Starlight default is row underlines only with no background color, so the cells are
+ * boxed in with borders and every other row is given a background (zebra striping).
+ */
+
+/* Starlight makes tables scrollable with display: block; overflow: auto;, where
+   border-collapse has no effect and the table's own border and the cell borders are drawn
+   separately as a double line. Bordering every side of the cells outlines the whole table
+   by itself, so the table gets no border of its own. */
+.sl-markdown-content :is(th, td):not(:where(.not-content *)) {
+	border: 1px solid var(--sl-color-gray-5);
+}
+
+/* Starlight cancels the outer padding of the first/last column to stretch the table to the
+   full content width, but with borders around them the columns are aligned instead. */
+.sl-markdown-content :is(th:first-child, td:first-child):not(:where(.not-content *)),
+.sl-markdown-content :is(th:last-child, td:last-child):not(:where(.not-content *)) {
+	padding-inline: 1rem;
+}
+
+.sl-markdown-content th:not(:where(.not-content *)) {
+	background-color: var(--sl-color-gray-6);
+}
+
+/* gray-6, the header row's color, is too dark for the stripes, so it is lightened with
+   transparency. The stripe has to blend into the background in both light and dark mode, and
+   gray-7 (lighter than gray-6) is only defined for light mode. */
+.sl-markdown-content tbody tr:nth-child(even) :is(th, td):not(:where(.not-content *)) {
+	background-color: color-mix(in srgb, var(--sl-color-gray-6) 50%, transparent);
+}

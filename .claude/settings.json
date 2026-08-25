@@ -1,0 +1,64 @@
+{
+  "autoUpdates": true,
+  "permissions": {
+    "allow": [
+      "Write",
+      "Edit",
+      "Bash(git:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(grep:*)",
+      "Bash(sed:*)",
+      "Bash(mkdir:*)",
+      "Bash(cp:*)",
+      "Bash(mv:*)",
+      "Bash(rm:*)",
+      "Bash(touch:*)",
+      "Bash(chmod:*)",
+      "Bash(diff:*)",
+      "Bash(which:*)",
+      "Bash(wc:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "WebFetch(domain:docs.github.com)",
+      "WebFetch(domain:docs.python.org)"
+    ],
+    "deny": [],
+    "ask": [
+      "Bash(git push:*)",
+      "Bash(sudo:*)"
+    ]
+  },
+  "sandbox": {
+    "enabled": true,
+    "credentials": {
+      "files": [
+        { "path": "~/.ssh", "mode": "deny" },
+        { "path": "~/.aws/credentials", "mode": "deny" }
+      ]
+    }
+  },
+  "hooks": {
+    "Notification": [
+      {
+        "matcher": "permission_prompt|idle_prompt|agent_needs_input|agent_completed",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "input=$(cat); title=\"Claude Code\"; body=$(jq -r '.message // \"Needs your attention\"' <<<\"$input\"); seq=$(printf '\\033]777;notify;%s;%s\\007' \"$title\" \"$body\"); jq -nc --arg seq \"$seq\" '{terminalSequence: $seq}'"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "seq=$(printf '\\033]777;notify;%s;%s\\007' \"Claude Code\" \"応答が完了しました\"); jq -nc --arg seq \"$seq\" '{terminalSequence: $seq}'"
+          }
+        ]
+      }
+    ]
+  }
+}

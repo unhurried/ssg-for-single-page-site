@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200" role="img" aria-labelledby="title desc">
+  <title id="title">ハンドドリップの模式図</title>
+  <desc id="desc">ドリッパーからサーバーへコーヒーが落ちる様子を示す図</desc>
+  <rect x="0" y="0" width="320" height="200" fill="#f5f5f2" rx="8"/>
+  <!-- ドリッパー -->
+  <polygon points="110,30 210,30 175,90 145,90" fill="#c98a4b" stroke="#7a4a1e" stroke-width="2"/>
+  <!-- 湯 -->
+  <ellipse cx="160" cy="45" rx="35" ry="8" fill="#e9d3b0"/>
+  <line x1="160" y1="90" x2="160" y2="115" stroke="#c98a4b" stroke-width="3"/>
+  <!-- サーバー -->
+  <path d="M120,115 L200,115 L190,175 Q160,190 130,175 Z" fill="none" stroke="#555555" stroke-width="3"/>
+  <ellipse cx="160" cy="150" rx="32" ry="18" fill="#4a2c17" opacity="0.85"/>
+  <text x="160" y="20" text-anchor="middle" font-size="14" fill="#333333" font-family="sans-serif">ハンドドリップ</text>
+  <text x="160" y="198" text-anchor="middle" font-size="12" fill="#555555" font-family="sans-serif">ドリッパー → サーバー</text>
+</svg>
