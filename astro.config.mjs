@@ -1,10 +1,11 @@
 // @ts-check
-import { defineConfig, passthroughImageService } from 'astro/config';
+import { defineConfig } from 'astro/config';
 import { unified } from '@astrojs/markdown-remark';
 import starlight from '@astrojs/starlight';
 import starlightThemeNova from 'starlight-theme-nova';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
+import { asciiDevBase } from './src/asciiDevBase.ts';
 import { starlightLocales } from './src/i18n.ts';
 import { remarkBreaks } from './src/remarkBreaks.ts';
 import { remarkHtmlImage } from './src/remarkHtmlImage.ts';
@@ -25,7 +26,9 @@ export default defineConfig({
 	image: {
 		// Emit image files as-is instead of optimizing them (sharp), so the build also
 		// works with `ignore-scripts=true` in .npmrc.
-		service: passthroughImageService(),
+		// A custom service rather than passthroughImageService(): see src/imageService.ts,
+		// which is also what makes a `base` with non-ASCII characters build.
+		service: { entrypoint: './src/imageService.ts', config: {} },
 	},
 	markdown: {
 		// Astro 7 defaults to the satteri Markdown processor, but rehype-katex (used to render
@@ -43,6 +46,9 @@ export default defineConfig({
 		}),
 	},
 	integrations: [
+		// `astro dev` cannot serve a base that URLs percent-encode (e.g. one with Japanese
+		// characters), so it falls back to the root there. Does nothing for an ASCII base.
+		asciiDevBase(),
 		starlight({
 			plugins: [starlightThemeNova()],
 			title: {

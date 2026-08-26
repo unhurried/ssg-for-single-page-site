@@ -29,6 +29,8 @@ Customizations are deliberately kept as CSS wherever possible: a stylesheet appl
 - `astro.config.mjs` — Starlight/Pagefind/KaTeX/`base`/i18n (`locales: starlightLocales` from `src/i18n.ts`) configuration
 - `src/remarkBreaks.ts` — renders a plain line break inside a paragraph as `<br>` instead of collapsing it into a space, so a document reads the way it was written (only `text` nodes are touched, so code blocks, inline code, and math are left alone)
 - `src/remarkHtmlImage.ts` — turns a raw `<img>` tag written in Markdown into the same mdast node as `![]()`, so it goes through Astro's image pipeline (relative path resolution, hashed output filenames) instead of being passed through untouched
+- `src/imageService.ts` — the image service used in place of `passthroughImageService()`: every image is served at the URL Vite emitted for it (`_astro/<hashed name>`) instead of being copied to a further hashed name at build time. Astro's built-in services find the file to copy by stripping `base` off that URL as it is written in the config, which stops matching as soon as URLs percent-encode the base, so a `base` containing non-ASCII characters would fail the build. Neither way optimizes anything, since this site does not resize or re-encode images
+- `src/asciiDevBase.ts` — integration that lets `astro dev` run with such a `base` as well: the dev server also matches the raw `base` against the percent-encoded request path, so every page would answer 404. It serves the site at the root instead (with a warning at startup); `astro build` keeps the configured `base`
 - `src/components/Sidebar.astro` — override that shows a table of contents (TOC) in the left sidebar instead of a page list
 - `src/components/TwoColumnContent.astro` — override that removes the right sidebar (originally the TOC column) to produce a two-pane layout
 - `src/components/SiteTitle.astro` — override that puts the current page title where the site title normally goes, doubling as a back-to-top link; the header itself is left to the theme
@@ -97,5 +99,7 @@ mkdir -p /tmp/webroot && ln -s "$(pwd)/dist" /tmp/webroot/starlight-demo
 cd /tmp/webroot && python3 -m http.server 8080
 # Access http://localhost:8080/starlight-demo/
 ```
+
+A `base` containing non-ASCII characters, such as `/日本語ディレクトリ/`, builds and deploys as well (URLs then carry it percent-encoded). Only the local servers of Astro are affected, because they match the request path against `base` as it is written while a browser sends it encoded: `npm run dev` serves the site at the root instead and says so at startup (see `src/asciiDevBase.ts`), and `npm run preview` cannot serve it at all — check the build output with the static server above, symlinking `dist` under the directory name of the base.
 
 Once the production origin is known, also set the `site` option in `astro.config.mjs` (e.g. `site: 'https://example.com'`). Without it, canonical URLs, `og:url`, and the sitemap are skipped.
