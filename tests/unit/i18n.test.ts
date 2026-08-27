@@ -14,37 +14,34 @@ import {
 const repoRoot = new URL('../../', import.meta.url);
 
 describe('generateDocsId', () => {
-	it('gives a document in the default locale a slug with no locale prefix', () => {
-		assert.equal(generateDocsId({ entry: 'a/ja/index.md' }), 'a');
-	});
-
-	it('moves the locale to the front of the slug for other locales', () => {
+	it('moves the locale to the front of the slug, the default locale included', () => {
+		assert.equal(generateDocsId({ entry: 'a/ja/index.md' }), 'ja/a');
 		assert.equal(generateDocsId({ entry: 'a/en/index.md' }), 'en/a');
 	});
 
-	it('returns "index" for a root index, which Starlight normalizes to an empty slug', () => {
-		assert.equal(generateDocsId({ entry: 'ja/index.md' }), 'index');
+	it('returns the locale itself for the index of a locale directory (its root)', () => {
+		assert.equal(generateDocsId({ entry: 'ja/index.md' }), 'ja');
 		assert.equal(generateDocsId({ entry: 'en/index.md' }), 'en');
 	});
 
 	it('keeps a file name other than index at the end of the slug', () => {
-		assert.equal(generateDocsId({ entry: 'a/ja/intro.md' }), 'a/intro');
+		assert.equal(generateDocsId({ entry: 'a/ja/intro.md' }), 'ja/a/intro');
 		assert.equal(generateDocsId({ entry: 'a/en/intro.md' }), 'en/a/intro');
 	});
 
 	it('moves only the locale to the front even for nested document directories', () => {
-		assert.equal(generateDocsId({ entry: 'x/y/ja/index.md' }), 'x/y');
+		assert.equal(generateDocsId({ entry: 'x/y/ja/index.md' }), 'ja/x/y');
 		assert.equal(generateDocsId({ entry: 'x/y/en/index.md' }), 'en/x/y');
 	});
 
 	it('keeps the directories below the locale directory in the slug', () => {
-		assert.equal(generateDocsId({ entry: 'a/ja/sub/page.md' }), 'a/sub/page');
-		assert.equal(generateDocsId({ entry: 'a/ja/sub/index.md' }), 'a/sub');
+		assert.equal(generateDocsId({ entry: 'a/ja/sub/page.md' }), 'ja/a/sub/page');
+		assert.equal(generateDocsId({ entry: 'a/ja/sub/index.md' }), 'ja/a/sub');
 	});
 
 	it('strips the extension whatever it is', () => {
 		for (const ext of ['md', 'mdx', 'markdown', 'mkd']) {
-			assert.equal(generateDocsId({ entry: `a/ja/index.${ext}` }), 'a');
+			assert.equal(generateDocsId({ entry: `a/ja/index.${ext}` }), 'ja/a');
 		}
 	});
 
@@ -65,16 +62,17 @@ describe('generateDocsId', () => {
 });
 
 describe('localeOfDocsId', () => {
-	it('treats a slug without a locale prefix as the default locale', () => {
-		assert.equal(localeOfDocsId('a'), 'ja');
-		assert.equal(localeOfDocsId('x/y'), 'ja');
-		assert.equal(localeOfDocsId('index'), 'ja');
-	});
-
-	it('takes the locale from a slug with a locale prefix', () => {
+	it('takes the locale from the prefix of the slug', () => {
+		assert.equal(localeOfDocsId('ja/a'), 'ja');
+		assert.equal(localeOfDocsId('ja'), 'ja');
 		assert.equal(localeOfDocsId('en/a'), 'en');
 		assert.equal(localeOfDocsId('en'), 'en');
 		assert.equal(localeOfDocsId('en/x/y'), 'en');
+	});
+
+	it('falls back to the default locale for a slug with no locale prefix', () => {
+		assert.equal(localeOfDocsId('a'), 'ja');
+		assert.equal(localeOfDocsId('x/y'), 'ja');
 	});
 
 	it('is the inverse of generateDocsId', () => {
@@ -101,16 +99,14 @@ describe('locale config consistency', () => {
 		assert.ok(defaultLocale in locales);
 	});
 
-	it('starlightLocales maps the default locale to root and keeps the others under their key', () => {
-		assert.deepEqual(starlightLocales.root, locales[defaultLocale]);
-		const nonDefault = Object.keys(locales).filter((locale) => locale !== defaultLocale);
-		assert.deepEqual(
-			Object.keys(starlightLocales).sort(),
-			['root', ...nonDefault].sort()
-		);
-		for (const locale of nonDefault) {
+	it('starlightLocales keeps every locale under its own key, with no root locale', () => {
+		// A `root` locale would put the default locale at the site root, which is where the
+		// redirect to it lives instead (src/pages/index.astro).
+		assert.equal(starlightLocales.root, undefined);
+		assert.deepEqual(Object.keys(starlightLocales).sort(), Object.keys(locales).sort());
+		for (const locale of Object.keys(locales)) {
 			assert.deepEqual(
-				starlightLocales[locale as keyof typeof starlightLocales],
+				starlightLocales[locale],
 				locales[locale as keyof typeof locales]
 			);
 		}
@@ -125,12 +121,17 @@ describe('locale config consistency', () => {
 
 	it('every locale has a top page (src/pages/<locale>/index.astro)', () => {
 		for (const locale of Object.keys(locales)) {
-			const path =
-				locale === defaultLocale ? 'src/pages/index.astro' : `src/pages/${locale}/index.astro`;
+			const path = `src/pages/${locale}/index.astro`;
 			assert.ok(
 				existsSync(fileURLToPath(new URL(path, repoRoot))),
 				`${path} is missing (add a top page when adding a locale)`
 			);
 		}
+	});
+
+	it('no locale sits at the site root, which is a redirect instead', () => {
+		// A page there would be the top page of a root locale; there is none (see
+		// starlightLocales), so the root is handled by src/localeRootRedirect.ts.
+		assert.ok(!existsSync(fileURLToPath(new URL('src/pages/index.astro', repoRoot))));
 	});
 });

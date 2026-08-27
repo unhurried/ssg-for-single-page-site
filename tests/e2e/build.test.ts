@@ -39,11 +39,11 @@ function matchAll(source: string, pattern: RegExp): string[] {
 describe('routing (the generateDocsId result becomes the URL)', () => {
 	it('generates HTML for every document', () => {
 		for (const page of [
-			'index.html', // top page of the default locale
+			'ja/index.html', // Japanese top page
 			'en/index.html', // English top page
-			'alpha/index.html',
-			'beta/index.html',
-			'gamma/guide/index.html', // document whose file name is not index
+			'ja/alpha/index.html',
+			'ja/beta/index.html',
+			'ja/gamma/guide/index.html', // document whose file name is not index
 			'en/alpha/index.html',
 			'en/beta/index.html',
 		]) {
@@ -51,11 +51,20 @@ describe('routing (the generateDocsId result becomes the URL)', () => {
 		}
 	});
 
-	it('URLs of the default locale carry no locale prefix', () => {
-		assert.ok(
-			!distFiles.some((file) => file.startsWith('ja/')),
-			`a directory for the default locale was generated: ${distFiles.filter((f) => f.startsWith('ja/')).join(', ')}`
+	it('every URL carries a locale prefix, the default locale included', () => {
+		const pages = distFiles.filter(
+			(file) => file.endsWith('.html') && !['index.html', '404.html'].includes(file)
 		);
+		const unprefixed = pages.filter((file) => !/^(?:ja|en)\//.test(file));
+		assert.deepEqual(unprefixed, [], `pages outside a locale directory: ${unprefixed.join(', ')}`);
+	});
+
+	it('the site root redirects to the top page of the default locale', () => {
+		// The root itself holds no page (no root locale), so it is a redirect page: a static build
+		// has no other way to send a visitor of `base` to a locale.
+		const page = html('index.html');
+		assert.match(page, new RegExp(`<meta http-equiv="refresh" content="0;url=${BASE}ja/">`));
+		assert.match(page, new RegExp(`<link rel="canonical" href="${BASE}ja/">`));
 	});
 
 	it('a document without a translation falls back to the default locale on another locale URL', () => {
@@ -68,7 +77,7 @@ describe('routing (the generateDocsId result becomes the URL)', () => {
 
 describe('page title (taken from the leading H1 of the body)', () => {
 	it('the <title>, the header, and the body h1 all use the H1 text', () => {
-		const page = html('alpha/index.html');
+		const page = html('ja/alpha/index.html');
 		assert.match(page, /<title>アルファ文書のタイトル \| /);
 		assert.match(page, /<a href="#"[^>]*class="page-title[^"]*"[^>]*>アルファ文書のタイトル<\/a>/);
 		assert.match(page, /<h1 id="_top"[^>]*>アルファ文書のタイトル<\/h1>/);
@@ -81,25 +90,25 @@ describe('page title (taken from the leading H1 of the body)', () => {
 	});
 
 	it('the H1 used as the title is removed from the body, leaving no duplicate h1', () => {
-		for (const page of ['alpha/index.html', 'en/alpha/index.html', 'beta/index.html']) {
+		for (const page of ['ja/alpha/index.html', 'en/alpha/index.html', 'ja/beta/index.html']) {
 			assert.equal(matchAll(html(page), /<h1[\s>]/g).length, 1, `${page} does not have exactly one h1`);
 		}
 	});
 
 	it('body headings (h2/h3) are left as they are', () => {
-		const page = html('alpha/index.html');
+		const page = html('ja/alpha/index.html');
 		assert.match(page, /<h2[^>]*>[\s\S]*?画像/);
 		assert.match(page, /<h3[^>]*>[\s\S]*?入れ子の見出し/);
 	});
 
 	it('does not mistake a `#` line in a leading code fence for the title', () => {
-		const page = html('beta/index.html');
+		const page = html('ja/beta/index.html');
 		assert.match(page, /<title>ベータ文書のタイトル \| /);
 		assert.doesNotMatch(page, /<title>[^<]*コメントであってページタイトルではない/);
 	});
 
 	it('stripping code fences to find the title does not affect the code blocks in the body', () => {
-		const page = html('beta/index.html');
+		const page = html('ja/beta/index.html');
 		assert.match(page, /この行はコメントであってページタイトルではない/);
 		assert.match(page, /usr\/bin\/env python3/);
 	});
@@ -108,13 +117,13 @@ describe('page title (taken from the leading H1 of the body)', () => {
 describe('line breaks (remarkBreaks)', () => {
 	it('a plain line break in a paragraph becomes <br>', () => {
 		assert.match(
-			html('alpha/index.html'),
+			html('ja/alpha/index.html'),
 			/Markdown標準では詰められてしまう単なる改行も、<br>\s*そのまま改行として表示される。/
 		);
 	});
 
 	it('a line break inside a code block does not become <br>', () => {
-		const code = /<pre[^>]*>[\s\S]*?<\/pre>/.exec(html('beta/index.html'))?.[0];
+		const code = /<pre[^>]*>[\s\S]*?<\/pre>/.exec(html('ja/beta/index.html'))?.[0];
 		assert.ok(code, 'no code block was generated');
 		assert.doesNotMatch(code, /<br\s*\/?>/, '<br> found inside a code block');
 		assert.match(code, /print/);
@@ -123,7 +132,7 @@ describe('line breaks (remarkBreaks)', () => {
 
 describe('images (on the Astro image pipeline)', () => {
 	it('both Markdown syntax and a raw HTML <img> point at a hashed output file', () => {
-		const images = matchAll(html('alpha/index.html'), /<img[^>]*>/g);
+		const images = matchAll(html('ja/alpha/index.html'), /<img[^>]*>/g);
 		assert.equal(images.length, 2, 'expected two images, one from Markdown syntax and one from raw HTML');
 		for (const image of images) {
 			const src = /src="([^"]+)"/.exec(image)?.[1];
@@ -137,7 +146,7 @@ describe('images (on the Astro image pipeline)', () => {
 	});
 
 	it('the width attribute and the alt written on a raw HTML <img> are carried over', () => {
-		const images = matchAll(html('alpha/index.html'), /<img[^>]*>/g);
+		const images = matchAll(html('ja/alpha/index.html'), /<img[^>]*>/g);
 		const fromHtmlTag = images.find((image) => image.includes('width="160"'));
 		assert.ok(fromHtmlTag, `no image with width="160":\n${images.join('\n')}`);
 		assert.match(fromHtmlTag, /alt="四角形の図（幅160px）"/);
@@ -148,7 +157,7 @@ describe('images (on the Astro image pipeline)', () => {
 
 describe('math (remark-math + rehype-katex)', () => {
 	it('inline and block math are rendered by KaTeX', () => {
-		const page = html('alpha/index.html');
+		const page = html('ja/alpha/index.html');
 		assert.ok(matchAll(page, /class="katex/g).length > 0, 'no KaTeX output');
 		assert.doesNotMatch(page, /\$\$/, 'a raw $$ is left in the body');
 		assert.doesNotMatch(page, /\$E = mc\^2\$/, 'raw inline math is left in the body');
@@ -166,10 +175,10 @@ describe('per-locale document list (top page)', () => {
 	}
 
 	it('the top page of the default locale lists its documents in slug order', () => {
-		assert.deepEqual(listItems(html('index.html')), [
-			{ href: `${BASE}alpha/`, text: 'アルファ文書のタイトル' },
-			{ href: `${BASE}beta/`, text: 'ベータ文書のタイトル' },
-			{ href: `${BASE}gamma/guide/`, text: 'ガンマ文書のガイド' },
+		assert.deepEqual(listItems(html('ja/index.html')), [
+			{ href: `${BASE}ja/alpha/`, text: 'アルファ文書のタイトル' },
+			{ href: `${BASE}ja/beta/`, text: 'ベータ文書のタイトル' },
+			{ href: `${BASE}ja/gamma/guide/`, text: 'ガンマ文書のガイド' },
 		]);
 	});
 
@@ -182,25 +191,25 @@ describe('per-locale document list (top page)', () => {
 	});
 
 	it('the top page title comes from indexTitles per locale', () => {
-		assert.match(html('index.html'), /<title>ドキュメント一覧 \| /);
+		assert.match(html('ja/index.html'), /<title>ドキュメント一覧 \| /);
 		assert.match(html('en/index.html'), /<title>Document List \| /);
 	});
 });
 
 describe('i18n', () => {
 	it('the lang attribute of a page switches per locale', () => {
-		assert.match(html('alpha/index.html'), /<html[^>]*lang="ja"/);
+		assert.match(html('ja/alpha/index.html'), /<html[^>]*lang="ja"/);
 		assert.match(html('en/alpha/index.html'), /<html[^>]*lang="en"/);
 	});
 
 	it('the locale switcher UI is generated', () => {
-		assert.match(html('alpha/index.html'), /<starlight-lang-select/);
+		assert.match(html('ja/alpha/index.html'), /<starlight-lang-select/);
 	});
 });
 
 describe('layout (the left sidebar holds the TOC)', () => {
 	it('the left sidebar shows a TOC linking to the body headings', () => {
-		const page = html('alpha/index.html');
+		const page = html('ja/alpha/index.html');
 		assert.match(page, /<page-toc/);
 		for (const anchor of ['#画像', '#数式', '#表', '#入れ子の見出し', '#コード']) {
 			assert.ok(page.includes(`href="${anchor}"`), `${anchor} is missing from the TOC`);
@@ -208,7 +217,7 @@ describe('layout (the left sidebar holds the TOC)', () => {
 	});
 
 	it('the sidebar shows no page list (links to other documents)', () => {
-		const links = matchAll(html('alpha/index.html'), new RegExp(`href="${BASE}[^"]*"`, 'g'));
+		const links = matchAll(html('ja/alpha/index.html'), new RegExp(`href="${BASE}[^"]*"`, 'g'));
 		const docLinks = links.filter((link) => !/_astro\/|favicon/.test(link));
 		assert.deepEqual(docLinks, [], `page list links are present: ${docLinks.join(', ')}`);
 	});

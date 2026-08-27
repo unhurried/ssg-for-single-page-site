@@ -34,7 +34,7 @@ function html(relativePath: string): string {
 
 describe('a base containing non-ASCII characters', () => {
 	it('builds every page', () => {
-		for (const page of ['index.html', 'en/index.html', 'alpha/index.html', 'gamma/guide/index.html']) {
+		for (const page of ['ja/index.html', 'en/index.html', 'ja/alpha/index.html', 'ja/gamma/guide/index.html']) {
 			assert.ok(distFiles.includes(page), `${page} was not generated`);
 		}
 	});
@@ -45,7 +45,7 @@ describe('a base containing non-ASCII characters', () => {
 	});
 
 	it('images point at an existing file through the encoded base, added exactly once', () => {
-		const images = [...html('alpha/index.html').matchAll(/<img[^>]*>/g)].map((match) => match[0]);
+		const images = [...html('ja/alpha/index.html').matchAll(/<img[^>]*>/g)].map((match) => match[0]);
 		assert.equal(images.length, 2, 'expected two images, one from Markdown syntax and one from raw HTML');
 		for (const image of images) {
 			const src = /src="([^"]+)"/.exec(image)?.[1];
@@ -68,26 +68,33 @@ describe('a base containing non-ASCII characters', () => {
 				// Both the desktop and the mobile header render the switcher.
 				.filter((value, index, values) => values.indexOf(value) === index);
 
-		assert.deepEqual(options(html('alpha/index.html')), [
-			`${ENCODED_BASE}alpha/`,
+		assert.deepEqual(options(html('ja/alpha/index.html')), [
+			`${ENCODED_BASE}ja/alpha/`,
 			`${ENCODED_BASE}en/alpha/`,
 		]);
 		assert.deepEqual(options(html('en/alpha/index.html')), [
-			`${ENCODED_BASE}alpha/`,
+			`${ENCODED_BASE}ja/alpha/`,
 			`${ENCODED_BASE}en/alpha/`,
 		]);
 	});
 
 	it('recognises the locale of a page rendered by <StarlightPage>', () => {
 		// The locale of the top pages comes from the path with the base stripped off as well.
-		assert.match(html('index.html'), /<html[^>]*lang="ja"/);
+		assert.match(html('ja/index.html'), /<html[^>]*lang="ja"/);
 		assert.match(html('en/index.html'), /<html[^>]*lang="en"/);
 	});
 
+	it('the redirect at the site root points at the default locale through the encoded base', () => {
+		// The target of the redirect goes into a Location header, which is no place for a raw
+		// non-ASCII base (see src/pages/index.astro).
+		const page = html('index.html');
+		assert.match(page, new RegExp(`<meta http-equiv="refresh" content="0;url=${ENCODED_BASE}ja/">`));
+	});
+
 	it('links of the document list carry the base', () => {
-		const list = /<ul>([\s\S]*?)<\/ul>/.exec(html('index.html'))?.[1];
+		const list = /<ul>([\s\S]*?)<\/ul>/.exec(html('ja/index.html'))?.[1];
 		assert.ok(list, 'no <ul> for the document list');
 		const hrefs = [...list.matchAll(/<a href="([^"]+)">/g)].map((match) => match[1] as string);
-		assert.deepEqual(hrefs, [`${BASE}alpha/`, `${BASE}beta/`, `${BASE}gamma/guide/`]);
+		assert.deepEqual(hrefs, [`${BASE}ja/alpha/`, `${BASE}ja/beta/`, `${BASE}ja/gamma/guide/`]);
 	});
 });

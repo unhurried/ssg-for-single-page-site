@@ -7,7 +7,8 @@ import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import { asciiDevBase } from './src/asciiDevBase.ts';
 import { starlightEncodedBase } from './src/starlightEncodedBase.ts';
-import { starlightLocales } from './src/i18n.ts';
+import { defaultLocale, starlightLocales } from './src/i18n.ts';
+import { localeRootRedirect } from './src/localeRootRedirect.ts';
 import { remarkBreaks } from './src/remarkBreaks.ts';
 import { remarkHtmlImage } from './src/remarkHtmlImage.ts';
 import { remarkStripLeadingHeading } from './src/remarkStripLeadingHeading.ts';
@@ -54,15 +55,21 @@ export default defineConfig({
 		// path (the language switcher, the locale of a <StarlightPage>). Does nothing otherwise.
 		// Must come after asciiDevBase(), which drops the base for `astro dev`.
 		starlightEncodedBase(),
+		// No locale lives at the site root, so `base` itself redirects to the default locale.
+		// Must come after asciiDevBase() as well: the destination carries the base in effect.
+		localeRootRedirect(defaultLocale),
 		starlight({
 			plugins: [starlightThemeNova()],
 			title: {
 				ja: 'Starlight デモサイト',
 				en: 'Starlight Demo Site',
 			},
-			// Japanese as the default locale (no prefix), English under /en/.
-			// The mapping to slugs (URL paths) is done by generateDocsId in src/i18n.ts.
+			// Every locale under a prefix of its own: Japanese under /ja/, English under /en/.
+			// The mapping to slugs (URL paths) is done by generateDocsId in src/i18n.ts; the site
+			// root holds no page and is redirected by localeRootRedirect() above.
 			locales: starlightLocales,
+			// Used for the fallback of a page that has no translation in the locale being viewed.
+			defaultLocale,
 			// No page list (site navigation). The left sidebar area is still rendered for an
 			// empty array, which leaves room for the table of contents.
 			sidebar: [],

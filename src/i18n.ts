@@ -1,4 +1,4 @@
-/** Supported locales. Keys are the locale directory name in content (= URL prefix, except the default). */
+/** Supported locales. Keys are the locale directory name in content, and the URL prefix. */
 export const locales = {
 	ja: { label: '日本語', lang: 'ja' },
 	en: { label: 'English', lang: 'en' },
@@ -6,16 +6,15 @@ export const locales = {
 
 export type Locale = keyof typeof locales;
 
-/** Default locale. Only this one has no URL prefix. */
+/** Default locale. Used for the fallback of an untranslated page and for the site root redirect. */
 export const defaultLocale: Locale = 'ja';
 
-/** Starlight's `locales` config (the default locale becomes the root locale). */
-export const starlightLocales = Object.fromEntries(
-	Object.entries(locales).map(([locale, config]) => [
-		locale === defaultLocale ? 'root' : locale,
-		config,
-	])
-);
+/**
+ * Starlight's `locales` config. Every locale sits under a URL prefix of its own (there is no
+ * `root` locale), so no page is generated at the site root; src/localeRootRedirect.ts redirects
+ * it to the default locale.
+ */
+export const starlightLocales: Record<string, { label: string; lang: string }> = { ...locales };
 
 /** Title of the top page (document list). */
 export const indexTitles: Record<Locale, string> = {
@@ -32,7 +31,7 @@ export const indexTitles: Record<Locale, string> = {
  * content layout as it is while still using Starlight's standard i18n (locale switcher, UI
  * strings, per-locale Pagefind index).
  *
- * e.g. a/ja/index.md -> 'a'  /  a/en/index.md -> 'en/a'
+ * e.g. a/ja/index.md -> 'ja/a'  /  a/en/index.md -> 'en/a'
  */
 export function generateDocsId({ entry }: { entry: string }): string {
 	const segments = entry.replace(/\.[^/.]+$/, '').split('/');
@@ -43,21 +42,18 @@ export function generateDocsId({ entry }: { entry: string }): string {
 	const locale = segments[localeIndex] as Locale;
 	const rest = [...segments.slice(0, localeIndex), ...segments.slice(localeIndex + 1)];
 	if (rest.at(-1) === 'index') rest.pop();
-	const prefix = locale === defaultLocale ? [] : [locale];
-	// Starlight normalizes the root index to an empty slug, so return 'index'.
-	return [...prefix, ...rest].join('/') || 'index';
+	// Every locale carries a prefix, so the slug is never empty: the index of a locale directory
+	// becomes the locale itself ('ja'), which is the slug Starlight gives that locale's root.
+	return [locale, ...rest].join('/');
 }
 
 /**
  * Derives the locale of a page from the slug `generateDocsId` produced (its inverse).
- * Pages in the default locale have no prefix, so a path not starting with a locale directory
- * is taken as the default locale.
+ * Every slug starts with its locale directory; anything else falls back to the default locale.
  *
- * e.g. 'a' -> 'ja'  /  'en/a' -> 'en'
+ * e.g. 'ja/a' -> 'ja'  /  'en/a' -> 'en'
  */
 export function localeOfDocsId(id: string): Locale {
 	const first = id.split('/')[0];
-	return first !== undefined && first !== defaultLocale && first in locales
-		? (first as Locale)
-		: defaultLocale;
+	return first !== undefined && first in locales ? (first as Locale) : defaultLocale;
 }
