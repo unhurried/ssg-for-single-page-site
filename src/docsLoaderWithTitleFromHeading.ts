@@ -13,7 +13,7 @@ type DocsLoaderOptions = Parameters<typeof docsLoader>[0];
  * the file is read, before the Markdown is rendered. A remark plugin therefore cannot supply
  * the title; instead `parseData` itself is wrapped to fill in `data.title` before validation.
  *
- * For how the H1 is found (excluding code fences), see src/titleFromHeading.ts.
+ * For how the H1 is found, see src/titleFromHeading.ts.
  *
  * The H1 left in the body would be shown twice alongside the page heading, so it is removed
  * at render time by remarkStripLeadingHeading (see astro.config.mjs).

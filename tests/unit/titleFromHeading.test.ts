@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { extractTitleFromMarkdown, stripCodeFences } from '../../src/titleFromHeading.ts';
+import { fromMarkdown } from 'mdast-util-from-markdown';
+import { toString } from 'mdast-util-to-string';
+import { remarkStripLeadingHeading } from '../../src/remarkStripLeadingHeading.ts';
+import { extractTitleFromMarkdown } from '../../src/titleFromHeading.ts';
 
 describe('extractTitleFromMarkdown', () => {
 	it('takes the leading H1 of the body as the title', () => {
@@ -35,8 +38,28 @@ describe('extractTitleFromMarkdown', () => {
 		assert.equal(extractTitleFromMarkdown('本文だけ\n'), undefined);
 	});
 
-	// A requirement specific to this project: never mistake a Python comment or a shebang for a heading.
-	describe('code fence exclusion', () => {
+	it('returns undefined for an empty heading, so the frontmatter title is used', () => {
+		assert.equal(extractTitleFromMarkdown('#\n\n本文\n'), undefined);
+	});
+
+	// The body is parsed as Markdown, so the title is the text of the heading, not its source.
+	describe('heading forms', () => {
+		it('takes an underlined (setext) H1 as the title too', () => {
+			assert.equal(extractTitleFromMarkdown('タイトル\n===\n\n本文\n'), 'タイトル');
+		});
+
+		it('drops the inline markup of the heading', () => {
+			assert.equal(extractTitleFromMarkdown('# `コード` と *強調*\n'), 'コード と 強調');
+		});
+
+		it('drops the closing hashes of a closed ATX heading', () => {
+			assert.equal(extractTitleFromMarkdown('# タイトル #\n'), 'タイトル');
+		});
+	});
+
+	// A requirement specific to this project: never mistake a Python comment or a shebang for a
+	// heading. Parsing the body handles this the same way the renderer does.
+	describe('`#` lines that are not headings', () => {
 		it('returns the real H1 after a leading code fence, not the `#` line inside it', () => {
 			const markdown = [
 				'```python',
@@ -85,8 +108,6 @@ describe('extractTitleFromMarkdown', () => {
 			assert.equal(extractTitleFromMarkdown(markdown), 'タイトル');
 		});
 
-		// ~~~ is a Markdown code fence too. The side that removes the H1 from the body recognizes it
-		// through the parser, so missing it here would make the title and the removed heading disagree.
 		it('ignores a ~~~ fence', () => {
 			const markdown = ['~~~python', '# コメント', '~~~', '', '# 本物のタイトル', ''].join('\n');
 			assert.equal(extractTitleFromMarkdown(markdown), '本物のタイトル');
@@ -98,28 +119,58 @@ describe('extractTitleFromMarkdown', () => {
 			);
 			assert.equal(extractTitleFromMarkdown(markdown), '本物のタイトル');
 		});
+
+		// An unclosed fence runs to the end of the document, so what follows is code, not a heading —
+		// which is how the document is rendered as well.
+		it('ignores a heading inside an unclosed fence', () => {
+			const markdown = ['```js', 'const a = 1;', '', '# タイトル', ''].join('\n');
+			assert.equal(extractTitleFromMarkdown(markdown), undefined);
+		});
+
+		it('ignores an indented code block', () => {
+			assert.equal(extractTitleFromMarkdown('    # コメント\n\n# 本物のタイトル\n'), '本物のタイトル');
+		});
+
+		// A `#` line in the frontmatter is a YAML comment. The frontmatter is removed before parsing.
+		it('ignores a comment in the frontmatter', () => {
+			const markdown = ['---', '# 下書き中', 'draft: true', '---', '', '# 本物のタイトル', ''].join(
+				'\n'
+			);
+			assert.equal(extractTitleFromMarkdown(markdown), '本物のタイトル');
+		});
 	});
 });
 
-describe('stripCodeFences', () => {
-	it('removes the fenced range and keeps the rest', () => {
-		const markdown = ['前', '```js', 'const a = 1;', '```', '後', ''].join('\n');
-		const stripped = stripCodeFences(markdown);
-		assert.ok(stripped.includes('前'));
-		assert.ok(stripped.includes('後'));
-		assert.ok(!stripped.includes('const a = 1;'));
-	});
+// The title extraction and the removal of the H1 from the body must always refer to the same
+// heading: they share leadingHeadingIndex, so a document that has a title has exactly that
+// heading removed, and one that has none keeps its body intact.
+describe('agreement with remarkStripLeadingHeading', () => {
+	const documents = [
+		'# タイトル\n\n本文\n',
+		'前書き\n\n# タイトル\n\n本文\n',
+		'タイトル\n===\n\n本文\n',
+		'```python\n# コメント\n```\n\n# 本物のタイトル\n',
+		'```js\nconst a = 1;\n\n# タイトル\n',
+		'## 見出し2\n\n本文\n',
+	];
 
-	it('removes nothing when a fence is unclosed, so no body is lost', () => {
-		const markdown = ['```js', 'const a = 1;', '', '# タイトル', ''].join('\n');
-		assert.equal(stripCodeFences(markdown), markdown);
-	});
+	for (const markdown of documents) {
+		it(`removes exactly the heading used as the title: ${JSON.stringify(markdown)}`, () => {
+			const title = extractTitleFromMarkdown(markdown);
+			const tree = fromMarkdown(markdown);
+			const before = tree.children.length;
+			remarkStripLeadingHeading()(tree);
+			const removed = before - tree.children.length;
 
-	it('removes a ~~~ fence the same way', () => {
-		const markdown = ['前', '~~~js', 'const a = 1;', '~~~', '後', ''].join('\n');
-		const stripped = stripCodeFences(markdown);
-		assert.ok(stripped.includes('前'));
-		assert.ok(stripped.includes('後'));
-		assert.ok(!stripped.includes('const a = 1;'));
-	});
+			if (title === undefined) {
+				assert.equal(removed, 0, 'a heading was removed although no title was extracted');
+			} else {
+				assert.equal(removed, 1, 'the heading used as the title was not removed');
+				assert.ok(
+					!tree.children.some((node) => node.type === 'heading' && toString(node) === title),
+					'the heading used as the title is still in the body'
+				);
+			}
+		});
+	}
 });

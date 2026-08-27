@@ -1,18 +1,33 @@
-// Strip fenced code blocks before searching for a heading, so a `# ...` line inside one
-// (a Python comment, a shebang) isn't mistaken for a heading.
-// Both ``` and ~~~ are handled because the side that removes the H1 from the body
-// (src/remarkStripLeadingHeading.ts) recognizes both through the Markdown parser. Handling
-// only one would make "the H1 used as the title" and "the H1 removed from the body" disagree,
-// turning a line of code into the title and dropping the real H1.
-export function stripCodeFences(markdown: string): string {
-	return markdown.replace(/^(```|~~~)[\s\S]*?^\1[ \t]*$/gm, '');
+import { parseFrontmatter } from '@astrojs/markdown-remark';
+import type { Root } from 'mdast';
+import { fromMarkdown } from 'mdast-util-from-markdown';
+import { toString } from 'mdast-util-to-string';
+
+/**
+ * Index of the leading H1 in a Markdown tree, or -1 if there is none.
+ *
+ * Shared by the two sides of "the H1 is the page title": the title extraction below, which
+ * parses the file, and src/remarkStripLeadingHeading.ts, which removes the same heading from
+ * the tree Astro renders. Both pick the heading the same way, so the title can never be taken
+ * from one heading while another is removed from the body.
+ */
+export function leadingHeadingIndex(tree: Root): number {
+	return tree.children.findIndex((node) => node.type === 'heading' && node.depth === 1);
 }
 
 /**
  * Extracts the leading H1 of a Markdown body (e.g. `# Title`) as the page title.
  * Returns undefined if there is none (the caller falls back to the `title` frontmatter).
+ *
+ * The body is parsed as Markdown rather than searched with a regular expression, so a `#` line
+ * that is not a heading (a comment in a code block or in the frontmatter, a shebang) is not
+ * mistaken for one, and the title is the text of the heading rather than its source (`# *a*`
+ * gives "a"). The frontmatter is removed the way Astro removes it before parsing a document.
  */
 export function extractTitleFromMarkdown(markdown: string): string | undefined {
-	const match = stripCodeFences(markdown).match(/^#\s+(.+?)\s*$/m);
-	return match?.[1];
+	const tree = fromMarkdown(parseFrontmatter(markdown).content);
+	const index = leadingHeadingIndex(tree);
+	if (index === -1) return undefined;
+	// An empty heading (`#` on a line of its own) is no title; fall back to the frontmatter.
+	return toString(tree.children[index]!) || undefined;
 }
