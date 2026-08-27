@@ -58,6 +58,32 @@ describe('a base containing non-ASCII characters', () => {
 		}
 	});
 
+	it('the language switcher points at the same page under the other locale', () => {
+		// Starlight compares `base` against the current path to swap the locale segment, so a base
+		// URLs encode used to put the locale in front of the base ('/en/<base>/…') and 404 on
+		// switching language (see src/starlightEncodedBase.ts).
+		const options = (page: string): string[] =>
+			[...page.matchAll(/<option value="([^"]*)"[^>]*>[^<]*<\/option>/g)]
+				.map((match) => match[1] as string)
+				// Both the desktop and the mobile header render the switcher.
+				.filter((value, index, values) => values.indexOf(value) === index);
+
+		assert.deepEqual(options(html('alpha/index.html')), [
+			`${ENCODED_BASE}alpha/`,
+			`${ENCODED_BASE}en/alpha/`,
+		]);
+		assert.deepEqual(options(html('en/alpha/index.html')), [
+			`${ENCODED_BASE}alpha/`,
+			`${ENCODED_BASE}en/alpha/`,
+		]);
+	});
+
+	it('recognises the locale of a page rendered by <StarlightPage>', () => {
+		// The locale of the top pages comes from the path with the base stripped off as well.
+		assert.match(html('index.html'), /<html[^>]*lang="ja"/);
+		assert.match(html('en/index.html'), /<html[^>]*lang="en"/);
+	});
+
 	it('links of the document list carry the base', () => {
 		const list = /<ul>([\s\S]*?)<\/ul>/.exec(html('index.html'))?.[1];
 		assert.ok(list, 'no <ul> for the document list');

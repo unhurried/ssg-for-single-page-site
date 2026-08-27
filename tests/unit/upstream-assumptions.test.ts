@@ -12,6 +12,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, it } from 'node:test';
+import { patchBaseExpression, PATCHED_MODULES } from '../../src/starlightEncodedBase.ts';
 
 const modules = new URL('../../node_modules/', import.meta.url);
 
@@ -43,6 +44,18 @@ describe('@astrojs/starlight assumptions', () => {
 	it('PageTitle sits in a ContentPanel of its own', () => {
 		const source = readUpstream('@astrojs/starlight/components/Page.astro');
 		assert.match(source, /<ContentPanel>\s*<PageTitle \/>/);
+	});
+
+	// Depended on by: src/starlightEncodedBase.ts, which rewrites this expression so the base is
+	// compared against the path in the same (percent-encoded) form. Without it the build only
+	// breaks for a base containing non-ASCII characters, and only in the rendering.
+	it('the helpers that strip base off a path still read it the same way', () => {
+		for (const modulePath of PATCHED_MODULES) {
+			assert.ok(
+				patchBaseExpression(readUpstream(modulePath), modulePath).includes('encodeURI'),
+				`${modulePath} was not rewritten`
+			);
+		}
 	});
 });
 

@@ -6,6 +6,7 @@ import starlightThemeNova from 'starlight-theme-nova';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import { asciiDevBase } from './src/asciiDevBase.ts';
+import { starlightEncodedBase } from './src/starlightEncodedBase.ts';
 import { starlightLocales } from './src/i18n.ts';
 import { remarkBreaks } from './src/remarkBreaks.ts';
 import { remarkHtmlImage } from './src/remarkHtmlImage.ts';
@@ -49,6 +50,10 @@ export default defineConfig({
 		// `astro dev` cannot serve a base that URLs percent-encode (e.g. one with Japanese
 		// characters), so it falls back to the root there. Does nothing for an ASCII base.
 		asciiDevBase(),
+		// Such a base also has to be percent-encoded where Starlight strips it off the current
+		// path (the language switcher, the locale of a <StarlightPage>). Does nothing otherwise.
+		// Must come after asciiDevBase(), which drops the base for `astro dev`.
+		starlightEncodedBase(),
 		starlight({
 			plugins: [starlightThemeNova()],
 			title: {
