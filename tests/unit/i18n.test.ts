@@ -131,7 +131,7 @@ describe('locale config consistency', () => {
 
 	it('no locale sits at the site root, which is a redirect instead', () => {
 		// A page there would be the top page of a root locale; there is none (see
-		// starlightLocales), so the root is handled by src/localeRootRedirect.ts.
+		// starlightLocales), so the root is handled by the `redirects` entry in astro.config.mjs.
 		assert.ok(!existsSync(fileURLToPath(new URL('src/pages/index.astro', repoRoot))));
 	});
 });

@@ -6,8 +6,7 @@ import starlightThemeNova from 'starlight-theme-nova';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import { defaultLocale, starlightLocales } from './src/i18n.ts';
-import { localeRootRedirect } from './src/localeRootRedirect.ts';
-import { portableBase } from './src/portableBase.ts';
+import { BUILD_BASE, portableBase } from './src/portableBase.ts';
 import { remarkBreaks } from './src/remarkBreaks.ts';
 import { remarkHtmlImage } from './src/remarkHtmlImage.ts';
 import { remarkStripLeadingHeading } from './src/remarkStripLeadingHeading.ts';
@@ -21,6 +20,12 @@ const base = '/starlight-demo/';
 // https://astro.build/config
 export default defineConfig({
 	base,
+	// No locale lives at the site root, so `base` itself redirects to the top page of the default
+	// locale. A static build writes an HTML page with a <meta http-equiv="refresh"> there; an
+	// adapter that supports redirects turns the same entry into a real 3xx.
+	// The destination carries the base the site is built under (BUILD_BASE, not `base`), which
+	// portableBase() rewrites to the configured base along with every other URL in the output.
+	redirects: { '/': `${BUILD_BASE}${defaultLocale}/` },
 	server: {
 		// Listen on 0.0.0.0: the default (localhost only) is unreachable through port
 		// forwarding from the host OS of the devcontainer.
@@ -48,8 +53,6 @@ export default defineConfig({
 		}),
 	},
 	integrations: [
-		// No locale lives at the site root, so `base` itself redirects to the default locale.
-		localeRootRedirect(defaultLocale),
 		starlight({
 			plugins: [starlightThemeNova()],
 			title: {
@@ -58,7 +61,7 @@ export default defineConfig({
 			},
 			// Every locale under a prefix of its own: Japanese under /ja/, English under /en/.
 			// The mapping to slugs (URL paths) is done by generateDocsId in src/i18n.ts; the site
-			// root holds no page and is redirected by localeRootRedirect() above.
+			// root holds no page and is redirected by `redirects` above.
 			locales: starlightLocales,
 			// Used for the fallback of a page that has no translation in the locale being viewed.
 			defaultLocale,

@@ -11,8 +11,8 @@ export const defaultLocale: Locale = 'ja';
 
 /**
  * Starlight's `locales` config. Every locale sits under a URL prefix of its own (there is no
- * `root` locale), so no page is generated at the site root; src/localeRootRedirect.ts redirects
- * it to the default locale.
+ * `root` locale), so no page is generated at the site root; the `redirects` entry in
+ * astro.config.mjs redirects it to the default locale.
  */
 export const starlightLocales: Record<string, { label: string; lang: string }> = { ...locales };
 

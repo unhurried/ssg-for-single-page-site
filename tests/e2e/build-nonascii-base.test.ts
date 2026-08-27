@@ -89,7 +89,7 @@ describe('a base containing non-ASCII characters', () => {
 
 	it('the redirect at the site root points at the default locale through the encoded base', () => {
 		// The target of the redirect goes into a Location header, which is no place for a raw
-		// non-ASCII base (see src/localeRootRedirect.ts).
+		// non-ASCII base (see the `redirects` entry in astro.config.mjs).
 		const page = html('index.html');
 		assert.match(page, new RegExp(`<meta http-equiv="refresh" content="0;url=${ENCODED_BASE}ja/">`));
 	});
