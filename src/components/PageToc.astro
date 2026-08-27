@@ -1,6 +1,6 @@
 ---
-// Table of contents of the current page. Rendered from the route data
-// (starlightRoute.toc, a public API) rather than with Starlight's <TableOfContents />.
+// Table of contents of the current page. Rendered from the TOC that src/routeData.ts takes off
+// the route data (Astro.locals.pageToc) rather than with Starlight's <TableOfContents />.
 //
 // That component loads its highlighting script (an IntersectionObserver looking for the
 // element crossing a band at the top of the viewport) together with the TOC markup. The
@@ -10,7 +10,7 @@
 // mirrors the upstream one, and the styling is done in src/styles/toc.css.
 import PageTocList from './PageTocList.astro';
 
-const { toc } = Astro.locals.starlightRoute;
+const { pageToc: toc } = Astro.locals;
 ---
 
 {

@@ -65,11 +65,12 @@ export default defineConfig({
 			// No page list (site navigation). The left sidebar area is still rendered for an
 			// empty array, which leaves room for the table of contents.
 			sidebar: [],
+			// Takes the TOC off the route data, which is what makes Starlight (and the theme) drop
+			// the right sidebar column, leaving a two-pane layout: left TOC + body.
+			routeMiddleware: './src/routeData.ts',
 			components: {
 				// Show the current page's table of contents in the left sidebar instead of a page list.
 				Sidebar: './src/components/Sidebar.astro',
-				// Drop the right column entirely for a two-pane layout: body + left TOC.
-				TwoColumnContent: './src/components/TwoColumnContent.astro',
 				// Show the current page name where the site title normally goes.
 				// (The header itself is the theme's. The theme plugin merges user-specified
 				//  components after its own, so this one wins.)

@@ -222,6 +222,14 @@ describe('layout (the left sidebar holds the TOC)', () => {
 		const docLinks = links.filter((link) => !/_astro\/|favicon/.test(link));
 		assert.deepEqual(docLinks, [], `page list links are present: ${docLinks.join(', ')}`);
 	});
+
+	// The right column (Starlight's own TOC column) is dropped by taking the TOC off the route
+	// data in src/routeData.ts, which no component override guards any more.
+	it('the right sidebar column is not rendered', () => {
+		const page = html('ja/alpha/index.html');
+		assert.doesNotMatch(page, /right-sidebar-container/);
+		assert.doesNotMatch(page, /<starlight-toc/);
+	});
 });
 
 describe('deployment base', () => {
