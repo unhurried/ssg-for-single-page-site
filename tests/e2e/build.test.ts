@@ -7,6 +7,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { before, describe, it } from 'node:test';
 import { buildFixtureSiteOrThrow, listFiles } from './buildFixtureSite.ts';
+import { BUILD_BASE } from '../../src/portableBase.ts';
 
 // Deliberately different from the production config ('/starlight-demo/' in astro.config.mjs),
 // which at the same time proves base is not hardcoded anywhere.
@@ -220,6 +221,16 @@ describe('layout (the left sidebar holds the TOC)', () => {
 		const links = matchAll(html('ja/alpha/index.html'), new RegExp(`href="${BASE}[^"]*"`, 'g'));
 		const docLinks = links.filter((link) => !/_astro\/|favicon/.test(link));
 		assert.deepEqual(docLinks, [], `page list links are present: ${docLinks.join(', ')}`);
+	});
+});
+
+describe('deployment base', () => {
+	it('nothing in the output is left under the placeholder base the site is built with', () => {
+		// src/portableBase.ts replaces it with `base` everywhere; a leftover would be a dead link.
+		const left = distFiles.filter((file) =>
+			readFileSync(path.join(distDir, file)).includes(BUILD_BASE)
+		);
+		assert.deepEqual(left, [], `files still carrying ${BUILD_BASE}: ${left.join(', ')}`);
 	});
 });
 

@@ -1,20 +1,21 @@
 // @ts-check
-import { defineConfig } from 'astro/config';
+import { defineConfig, passthroughImageService } from 'astro/config';
 import { unified } from '@astrojs/markdown-remark';
 import starlight from '@astrojs/starlight';
 import starlightThemeNova from 'starlight-theme-nova';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
-import { asciiDevBase } from './src/asciiDevBase.ts';
-import { starlightEncodedBase } from './src/starlightEncodedBase.ts';
 import { defaultLocale, starlightLocales } from './src/i18n.ts';
 import { localeRootRedirect } from './src/localeRootRedirect.ts';
+import { portableBase } from './src/portableBase.ts';
 import { remarkBreaks } from './src/remarkBreaks.ts';
 import { remarkHtmlImage } from './src/remarkHtmlImage.ts';
 import { remarkStripLeadingHeading } from './src/remarkStripLeadingHeading.ts';
 
 // Subdirectory of the web server the site is deployed under.
 // e.g. keep '/starlight-demo/' for https://example.com/starlight-demo/, or use '/' for the root.
+// The site is not built under this path but under an ASCII placeholder, which portableBase()
+// replaces with it in the output, so a path containing non-ASCII characters works too.
 const base = '/starlight-demo/';
 
 // https://astro.build/config
@@ -27,10 +28,9 @@ export default defineConfig({
 	},
 	image: {
 		// Emit image files as-is instead of optimizing them (sharp), so the build also
-		// works with `ignore-scripts=true` in .npmrc.
-		// A custom service rather than passthroughImageService(): see src/imageService.ts,
-		// which is also what makes a `base` with non-ASCII characters build.
-		service: { entrypoint: './src/imageService.ts', config: {} },
+		// works with `ignore-scripts=true` in .npmrc. This site does not resize or re-encode
+		// images, so nothing is lost by it.
+		service: passthroughImageService(),
 	},
 	markdown: {
 		// Astro 7 defaults to the satteri Markdown processor, but rehype-katex (used to render
@@ -48,15 +48,7 @@ export default defineConfig({
 		}),
 	},
 	integrations: [
-		// `astro dev` cannot serve a base that URLs percent-encode (e.g. one with Japanese
-		// characters), so it falls back to the root there. Does nothing for an ASCII base.
-		asciiDevBase(),
-		// Such a base also has to be percent-encoded where Starlight strips it off the current
-		// path (the language switcher, the locale of a <StarlightPage>). Does nothing otherwise.
-		// Must come after asciiDevBase(), which drops the base for `astro dev`.
-		starlightEncodedBase(),
 		// No locale lives at the site root, so `base` itself redirects to the default locale.
-		// Must come after asciiDevBase() as well: the destination carries the base in effect.
 		localeRootRedirect(defaultLocale),
 		starlight({
 			plugins: [starlightThemeNova()],
@@ -92,5 +84,8 @@ export default defineConfig({
 				'./src/styles/table.css',
 			],
 		}),
+		// Rewrites the placeholder base the site is built under to `base` above (see
+		// src/portableBase.ts). Must stay last: it rewrites what every other integration wrote.
+		portableBase(),
 	],
 });

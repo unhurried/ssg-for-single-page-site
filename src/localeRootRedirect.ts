@@ -5,15 +5,13 @@
 // `redirects` entry: the build then writes an HTML page with a <meta http-equiv="refresh"> there,
 // and an adapter that supports redirects can turn the same entry into a real 3xx.
 //
-// It is registered as an integration rather than written into the config directly for two
-// reasons: the destination has to carry the base, which `redirects` does not add by itself, and
-// the base is the one in effect (`astro dev` falls back to '/', see src/asciiDevBase.ts).
-//
-// A page under src/pages/ would be the obvious alternative, but Astro's i18n router answers 404
-// for a path that carries no locale unless it recognises the path as the site root — which it
-// does by comparing it against `base` as written, so a base that URLs percent-encode never
-// matches and the page is dropped from the build. A `redirects` entry is not routed through it.
+// The destination has to carry the base, which `redirects` does not add by itself. The base in
+// question is the one the site is built under (BUILD_BASE, see src/portableBase.ts), which the
+// build output then rewrites to the configured one along with every other URL. Reading it from
+// the constant rather than from `config.base` keeps this independent of where the integration
+// sits in `integrations` (portableBase() replaces the base in a hook of its own).
 import type { AstroIntegration } from 'astro';
+import { BUILD_BASE } from './portableBase.ts';
 
 /** Path the site root redirects to, e.g. base '/docs/' and locale 'ja' -> '/docs/ja/'. */
 export function localeRootPath(base: string, locale: string): string {
@@ -24,10 +22,8 @@ export function localeRootRedirect(locale: string): AstroIntegration {
 	return {
 		name: 'locale-root-redirect',
 		hooks: {
-			'astro:config:setup': ({ config, updateConfig }) => {
-				// The base as written: Astro percent-encodes the destination itself when it puts it
-				// into the Location header, so encoding it here would encode it twice.
-				updateConfig({ redirects: { '/': localeRootPath(config.base, locale) } });
+			'astro:config:setup': ({ updateConfig }) => {
+				updateConfig({ redirects: { '/': localeRootPath(BUILD_BASE, locale) } });
 			},
 		},
 	};
