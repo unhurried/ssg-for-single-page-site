@@ -3,11 +3,11 @@ import { defineConfig, passthroughImageService } from 'astro/config';
 import { unified } from '@astrojs/markdown-remark';
 import starlight from '@astrojs/starlight';
 import starlightThemeNova from 'starlight-theme-nova';
+import remarkBreaks from 'remark-breaks';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import { defaultLocale, starlightLocales } from './src/i18n.ts';
 import { BUILD_BASE, portableBase } from './src/portableBase.ts';
-import { remarkBreaks } from './src/remarkBreaks.ts';
 import { remarkHtmlImage } from './src/remarkHtmlImage.ts';
 import { remarkStripLeadingHeading } from './src/remarkStripLeadingHeading.ts';
 
@@ -43,7 +43,8 @@ export default defineConfig({
 		// So the remark/rehype based unified processor is selected explicitly.
 		processor: unified({
 			// remarkBreaks: output a line break inside a paragraph as <br> (Markdown collapses it
-			// into a space, but these documents expect the lines they were written as).
+			// into a space, but these documents expect the lines they were written as). It only
+			// rewrites text, so code blocks, inline code and math keep their line breaks.
 			// remarkHtmlImage: turn an <img> tag written as raw HTML in Markdown into the same mdast
 			// node as ![](), putting it on Astro's image pipeline (relative paths, hashed filenames).
 			// remarkStripLeadingHeading: the leading H1 is used as the page title, so remove it from
