@@ -17,9 +17,9 @@ page-toc a {
 	display: block;
 	border-radius: 0.25rem;
 	/* Indent by the heading depth (--depth is set on each ul by PageTocList.astro). */
-	padding-block: 0.25rem;
+	padding-block: 0.4rem;
 	padding-inline: calc(1rem * var(--depth, 0) + var(--pad-inline)) var(--pad-inline);
-	line-height: 1.25;
+	line-height: 1.4;
 	text-decoration: none;
 }
 
