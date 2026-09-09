@@ -1,0 +1,2 @@
+/* Minimum styles needed to render math (KaTeX). The Starlight default theme is untouched. */
+@import 'katex/dist/katex.min.css';

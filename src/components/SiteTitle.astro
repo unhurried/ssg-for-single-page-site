@@ -1,0 +1,35 @@
+---
+// Shows the current page name in place of the site title (a site title, and the link to the
+// site top it provides, is deliberately not wanted).
+//
+// The in-body page title is visually hidden (src/styles/page-title.css), so the page name
+// shown here doubles as the way back to the top of the page.
+//
+// The header as a whole (search, locale/theme switchers, mobile menu layout) is left to the
+// theme's Header; only this component rendered from it is replaced. Wrapping and overflow are
+// handled by the Header's wrapper, so only the ellipsis is specified here.
+const { entry } = Astro.locals.starlightRoute;
+---
+
+<a href="#" class="page-title">{entry.data.title}</a>
+
+<style>
+	@layer nova {
+		.page-title {
+			min-width: 0;
+			overflow: hidden;
+			margin: -0.375rem;
+			padding: 0.375rem;
+			border-radius: 0.375rem;
+			white-space: nowrap;
+			text-overflow: ellipsis;
+			font-size: var(--sl-text-lg);
+			font-weight: 600;
+			color: var(--sl-color-white);
+			text-decoration: none;
+		}
+		.page-title:hover {
+			color: var(--sl-color-accent-high);
+		}
+	}
+</style>

@@ -1,0 +1,4 @@
+<!-- Site favicon: a document (a page with a folded corner and lines of text).
+     Drawn in a single color that follows the browser's color scheme, so it stays visible on
+     both a light and a dark tab bar. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128"><g fill="none" stroke="#000" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"><path d="M70 12H35a10 10 0 0 0-10 10v84a10 10 0 0 0 10 10h58a10 10 0 0 0 10-10V45Z"/><path d="M70 12v23a10 10 0 0 0 10 10h23"/><path stroke-width="9" d="M44 61h40M44 81h40M44 101h24"/></g><style>@media (prefers-color-scheme:dark){g{stroke:#fff}}</style></svg>
