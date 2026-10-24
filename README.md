@@ -39,7 +39,7 @@ Customizations avoid component overrides where possible: CSS and route-middlewar
 - `src/styles/toc.css` — TOC styling: list/indent/current-entry rules (moved out of Starlight's scoped styles), plus this repo's tweaks — no underline on links, and only the first heading level shown by default, expanding for the currently displayed item (VuePress-style)
 - `src/styles/page-title.css` — visually hides the page title Starlight renders in the body (it is shown in the header instead) while keeping the `<h1>` for the skip link and the heading hierarchy, and collapses the now-empty panel it sits in
 - `src/styles/table.css` — table tweaks: cells boxed in with borders and zebra striping, where the Starlight default is row underlines only
-- `src/styles/katex.css` — a file that only loads the KaTeX CSS needed for math rendering (no design customization)
+- `src/styles/katex.css` — a file that only loads the KaTeX CSS needed for math rendering (no design customization). The `overrides` entry in `package.json` makes rehype-katex render with this same `katex` package, since KaTeX's class names change between versions
 - `tests/` — the test suite (see [Tests](#tests))
 
 Everything else is left at the Starlight defaults (with `starlight-theme-nova` applied on top of them).
@@ -65,7 +65,7 @@ They run on Node's built-in test runner (`node --test`), so there are no test de
 
 | Path | What it covers |
 | --- | --- |
-| `tests/unit/` | The pure logic this project adds on top of Starlight: slug mapping (`i18n.test.ts`), the base-path rewrite (`portableBase.test.ts`), H1 title extraction (`titleFromHeading.test.ts`), the remark plugins (`remarkStripLeadingHeading.test.ts`, `remarkHtmlImage.test.ts`), and TOC highlighting (`activeTocIndex.test.ts`). `upstream-assumptions.test.ts` instead checks that the Starlight/theme internals the customizations rely on are still present — a failure means an upgrade needs following up, not that something is broken. |
+| `tests/unit/` | The pure logic this project adds on top of Starlight: slug mapping (`i18n.test.ts`), the base-path rewrite (`portableBase.test.ts`), H1 title extraction (`titleFromHeading.test.ts`), the remark plugins (`remarkStripLeadingHeading.test.ts`, `remarkHtmlImage.test.ts`), and TOC highlighting (`activeTocIndex.test.ts`). `upstream-assumptions.test.ts` instead checks that the Starlight/theme internals the customizations rely on are still present, and that rehype-katex uses the same KaTeX as the stylesheet — a failure means an upgrade needs following up, not that something is broken. |
 | `tests/content/` | The documents actually sitting in `src/content/docs/`: every file maps to a slug, slugs don't collide, every file has a title, and every relative image reference resolves. Useful as an intake check after swapping in your own documents. |
 | `tests/e2e/` | A real `astro build` against `tests/fixtures/docs/`. `build.test.ts` asserts on the generated HTML — URLs, titles, `<br>` line breaks, hashed images, KaTeX, the document list, TOC sidebar, Pagefind index, and the deployment path written into the output. `build-errors.test.ts` checks that misplaced documents fail with a message naming the offending file. `build-nonascii-base.test.ts` builds with a Japanese `base` and checks every place percent-encoding could break it. Both assert no file is left carrying the placeholder base. |
 

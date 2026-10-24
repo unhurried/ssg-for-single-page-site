@@ -1,2 +1,4 @@
 /* Minimum styles needed to render math (KaTeX). The Starlight default theme is untouched. */
+/* The stylesheet must match the katex version rehype-katex renders with (class names change
+   between versions); the katex `overrides` entry in package.json keeps the two the same. */
 @import 'katex/dist/katex.min.css';
