@@ -29,19 +29,19 @@ describe('@astrojs/starlight assumptions', () => {
 	// Depended on by: src/styles/page-title.css (hides h1#_top and collapses its parent panel).
 	// The constants module is not in the exports and cannot be imported, so the value is inlined.
 	it('the id of the page title h1 is still "_top"', () => {
-		assert.match(readUpstream('@astrojs/starlight/constants.ts'), /PAGE_TITLE_ID = '_top'/);
+		assert.match(readUpstream('@astrojs/starlight/dist/constants.js'), /PAGE_TITLE_ID = ["']_top["']/);
 	});
 
 	// Depended on by: the .content-panel:has(> .sl-container > h1#_top) selector in src/styles/page-title.css
 	it('ContentPanel still nests .content-panel > .sl-container', () => {
-		const source = readUpstream('@astrojs/starlight/components/ContentPanel.astro');
+		const source = readUpstream('@astrojs/starlight/dist/components/ContentPanel.astro');
 		assert.match(source, /class="content-panel"[\s\S]*class="sl-container"/);
 	});
 
 	// Depended on by: src/styles/page-title.css, which uses :only-child to drop the padding and
 	// separator of the panel, assuming PageTitle sits alone in one ContentPanel.
 	it('PageTitle sits in a ContentPanel of its own', () => {
-		const source = readUpstream('@astrojs/starlight/components/Page.astro');
+		const source = readUpstream('@astrojs/starlight/dist/components/Page.astro');
 		assert.match(source, /<ContentPanel>\s*<PageTitle \/>/);
 	});
 });
