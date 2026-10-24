@@ -1,5 +1,5 @@
 // Tests that make it noticeable when an assumption breaks in the places where this project
-// leans on Starlight / starlight-theme-nova internals.
+// leans on Starlight / starlight-theme-nova internals or on how KaTeX gets installed.
 //
 // A customization that cannot be done through a public API has to depend on files outside the
 // package exports, or on properties that are private as far as the types go. Such a dependency
@@ -10,6 +10,7 @@
 // fix the depending file named in each test's comment.
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { describe, it } from 'node:test';
 
@@ -61,5 +62,17 @@ describe('starlight-theme-nova assumptions', () => {
 	it('the theme gives user components precedence over its own', () => {
 		const source = readUpstream('starlight-theme-nova/src/index.ts');
 		assert.match(source, /\.\.\.components,\s*\.\.\.config\.components,/);
+	});
+});
+
+describe('KaTeX assumptions', () => {
+	// Depended on by: src/styles/katex.css and the katex `overrides` entry in package.json.
+	// The stylesheet comes from the katex this project depends on, while the math is rendered by
+	// the katex rehype-katex depends on. KaTeX renames the classes it emits between versions
+	// (e.g. .base -> .katex-base), so with two versions installed the stylesheet misses the markup.
+	it('rehype-katex renders with the katex the stylesheet comes from', () => {
+		const require = createRequire(import.meta.url);
+		const fromRehypeKatex = createRequire(require.resolve('rehype-katex')).resolve('katex');
+		assert.equal(fromRehypeKatex, require.resolve('katex'));
 	});
 });

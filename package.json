@@ -24,5 +24,8 @@
     "remark-math": "^6.0.0",
     "starlight-theme-nova": "^0.12.3",
     "unist-util-visit": "^5.1.0"
+  },
+  "overrides": {
+    "katex": "$katex"
   }
 }
