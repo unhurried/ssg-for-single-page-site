@@ -25,6 +25,8 @@ node --test --test-name-pattern="<name>" tests/unit/i18n.test.ts
 
 `tests/e2e/*` build temporary projects under `tests/.tmp/` (gitignored) with `--base /test-base/`, deliberately different from `astro.config.mjs`'s configured base, to catch hardcoded paths.
 
+Updating dependencies follows `.claude/skills/update-deps/SKILL.md`. It needs npm 11.10.0 or later, since older npm silently ignores `.npmrc`'s `min-release-age`.
+
 ## Architecture notes
 
 - Content lives at `src/content/docs/{docName}/{locale}/index.md`; `src/i18n.ts` remaps that doc-then-locale layout to Starlight's expected locale-prefixed slugs (`generateDocsId`/`localeOfDocsId`). Changing the locale list or the directory convention means updating that file and the loader wiring in `src/content.config.ts`.
